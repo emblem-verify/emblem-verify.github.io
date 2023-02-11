@@ -161,7 +161,7 @@
             this.loading = true;
 
             let link = this.enteredLink;
-            let id = link.split("/").pop();
+            let id = link.split('#')[0].split('?')[0].split("/").pop();
             console.log("Token ID = ", id);
             this.tokenID = id;
 

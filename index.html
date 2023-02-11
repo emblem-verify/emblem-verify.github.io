@@ -60,6 +60,8 @@
           Check
         </button>
 
+        <img v-show="loading" src="loader.gif" class="mt-4 mx-auto h-12" />
+
         <div class="w-3/5 mx-auto mt-6 text-lg">
           <div v-if="vaultOwner && inscriptionOwner" class="text-2xl">
             <div
@@ -143,12 +145,21 @@
             tokenID: null,
             punkID: null,
             lowestInscriptionID: null,
-            lowestInscriptionHash: null
+            lowestInscriptionHash: null,
+            loading: false
           };
         },
         //methods: {
         methods: {
           checkLegit: function () {
+            this.vaultOwner = null;
+            this.inscriptionOwner = null;
+            this.tokenID = null;
+            this.punkID = null;
+            this.lowestInscriptionID = null;
+            this.lowestInscriptionHash = null;
+            this.loading = true;
+
             let link = this.enteredLink;
             let id = link.split("/").pop();
             console.log("Token ID = ", id);
@@ -203,8 +214,10 @@
                         )[1];
                         console.log("Inscription owner = ", address);
                         this.inscriptionOwner = address;
+                        this.loading = false;
 
-                        if (inscriptionOwner == vaultOwner) {
+
+                        if (this.inscriptionOwner == this.vaultOwner) {
                           console.log("LEGIT! *****");
                         } else {
                           console.log("FAKE! ******");

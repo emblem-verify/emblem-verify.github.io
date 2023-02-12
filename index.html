@@ -151,6 +151,13 @@
         },
         //methods: {
         methods: {
+          padNumber: function (num) {
+            num = num.toString();
+            while (num.length < 4) {
+              num = "0" + num;
+            }
+            return num;
+          },
           checkLegit: function () {
             this.vaultOwner = null;
             this.inscriptionOwner = null;
@@ -164,11 +171,12 @@
             let id = link.split('#')[0].split('?')[0].split("/").pop();
             console.log("Token ID = ", id);
             this.tokenID = id;
+////https://api.emblemvault.io/s:evmetadata/meta/
 
             fetch(
               "https://api2.emblemvault.io/meta/" + id + "?experimental=true",
               {
-                method: "GET"
+                method: "GET",
               }
             )
               .then((res) => res.json())
@@ -181,6 +189,7 @@
 
                 let punkID = res.name.match(/#\d+/);
                 punkID = punkID[0].replace("#", "");
+                punkID = this.padNumber(punkID);
                 this.punkID = punkID;
                 console.log("Punk ID = ", punkID);
 
@@ -222,16 +231,19 @@
                         } else {
                           console.log("FAKE! ******");
                         }
+                        
                       })
                       .catch((error) => {
                         console.error(error);
                       });
                   });
               });
-          }
+          },
         },
-        mounted() {}
+        mounted() {
+        }
       }).mount("#app");
+
     </script>
   </body>
 </html>

@@ -63,7 +63,14 @@
         <img v-show="loading" src="loader.gif" class="mt-4 mx-auto h-12" />
 
         <div class="w-3/5 mx-auto mt-6 text-lg">
-          <div v-if="vaultOwner && inscriptionOwner" class="text-2xl">
+          <div v-if="unableToDetermine" class="text-2xl">
+              <div
+              class="flex justify-center border-4 text-gray-600 border-gray-500 p-2 m-2"
+            >
+              <img src="yellow.webp" class="h-8 mr-2" /> Unable to determine. Use &nbsp;<a href="https://twitter.com/adamamcbride/status/1624205061751738374" target="_blank">manual method</a>&nbsp; to verify.
+            </div>
+          </div>
+          <div v-else-if="vaultOwner && inscriptionOwner" class="text-2xl">
             <div
               v-if="vaultOwner == inscriptionOwner"
               class="flex justify-center border-4 border-green-500 p-2 m-2"
@@ -146,7 +153,8 @@
             punkID: null,
             lowestInscriptionID: null,
             lowestInscriptionHash: null,
-            loading: false
+            loading: false,
+            unableToDetermine: false
           };
         },
         //methods: {
@@ -166,6 +174,7 @@
             this.lowestInscriptionID = null;
             this.lowestInscriptionHash = null;
             this.loading = true;
+            this.unableToDetermine = false;
 
             let link = this.enteredLink;
             let id = link.split('#')[0].split('?')[0].split("/").pop();
@@ -193,50 +202,56 @@
                 this.punkID = punkID;
                 console.log("Punk ID = ", punkID);
 
-                fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
-                  method: "GET"
-                })
-                  .then((res) => res.json())
-                  .then((res) => {
-                    //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
-                    console.log("Lowest inscription ID = ", res[punkID].lowest);
-                    console.log(
-                      "Lowest inscription TX = ",
-                      res[punkID].hashes[res[punkID].lowest]
-                    );
-                    this.lowestInscriptionID = res[punkID].lowest;
-                    this.lowestInscriptionHash =
-                      res[punkID].hashes[res[punkID].lowest];
+                if(res.name.toLowerCase().includes("punk")) {
+                  fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
+                    method: "GET"
+                  })
+                    .then((res) => res.json())
+                    .then((res) => {
+                      //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
+                      console.log("Lowest inscription ID = ", res[punkID].lowest);
+                      console.log(
+                        "Lowest inscription TX = ",
+                        res[punkID].hashes[res[punkID].lowest]
+                      );
+                      this.lowestInscriptionID = res[punkID].lowest;
+                      this.lowestInscriptionHash =
+                        res[punkID].hashes[res[punkID].lowest];
 
-                    fetch(
-                      "https://ordinals.com/inscription/" +
-                        res[punkID].hashes[res[punkID].lowest],
-                      {
-                        method: "GET"
-                      }
-                    )
-                      .then((res) => res.text())
-                      .then((data) => {
-                        //console.log(data);
-                        const address = data.match(
-                          /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
-                        )[1];
-                        console.log("Inscription owner = ", address);
-                        this.inscriptionOwner = address;
-                        this.loading = false;
-
-
-                        if (this.inscriptionOwner == this.vaultOwner) {
-                          console.log("LEGIT! *****");
-                        } else {
-                          console.log("FAKE! ******");
+                      fetch(
+                        "https://ordinals.com/inscription/" +
+                          res[punkID].hashes[res[punkID].lowest],
+                        {
+                          method: "GET"
                         }
-                        
-                      })
-                      .catch((error) => {
-                        console.error(error);
-                      });
-                  });
+                      )
+                        .then((res) => res.text())
+                        .then((data) => {
+                          //console.log(data);
+                          const address = data.match(
+                            /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
+                          )[1];
+                          console.log("Inscription owner = ", address);
+                          this.inscriptionOwner = address;
+                          this.loading = false;
+
+
+                          if (this.inscriptionOwner == this.vaultOwner) {
+                            console.log("LEGIT! *****");
+                          } else {
+                            console.log("FAKE! ******");
+                          }
+                          
+                        })
+                        .catch((error) => {
+                          console.error(error);
+                        });
+                    });
+                } else {
+                  console.log("Unable to determine if this is a punk listing. The title does not contain a reference to punks.");
+                  this.loading = false;
+                  this.unableToDetermine = true;
+                }
               });
           },
         },

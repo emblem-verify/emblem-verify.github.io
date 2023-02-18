@@ -70,6 +70,15 @@
               <img src="yellow.webp" class="h-8 mr-2" /> Unable to determine. Use &nbsp;<a href="https://twitter.com/adamamcbride/status/1624205061751738374" target="_blank">manual method</a>&nbsp; to verify.
             </div>
           </div>
+          <div v-else-if="fakeContract">
+              <div
+              class="text-2xl flex justify-center border-2 border-red-500 p-2 m-2"
+              style="color: red;"
+            >
+              <img src="red.svg" class="h-8 mr-2" />
+              Vault is fake.
+            </div>
+          </div>
           <div v-else-if="vaultOwner && inscriptionOwner" class="text-2xl">
             <div
               v-if="vaultOwner == inscriptionOwner"
@@ -175,84 +184,93 @@
             this.lowestInscriptionHash = null;
             this.loading = true;
             this.unableToDetermine = false;
+            this.fakeContract = false;
 
             let link = this.enteredLink;
-            let id = link.split('#')[0].split('?')[0].split("/").pop();
+            let linkParts = link.split('#')[0].split('?')[0].split("/");
+            let id = linkParts.pop();
+            let contract = linkParts.pop();
             console.log("Token ID = ", id);
+            console.log("Contract = ", contract);
             this.tokenID = id;
-////https://api.emblemvault.io/s:evmetadata/meta/
 
-            fetch(
-              "https://api2.emblemvault.io/meta/" + id + "?experimental=true",
-              {
-                method: "GET",
-              }
-            )
-              .then((res) => res.json())
-              .then((res) => {
-                const btcCoin = res.addresses.find(
-                  (coin) => coin.coin === "BTC"
-                );
-                console.log("Emblem vault owner = ", btcCoin.address);
-                this.vaultOwner = btcCoin.address;
-
-                let punkID = res.name.match(/\d+/);
-                punkID = punkID[0].replace("#", "");
-                punkID = this.padNumber(punkID);
-                this.punkID = punkID;
-                console.log("Punk ID = ", punkID);
-
-                if(res.name.toLowerCase().includes("punk")) {
-                  fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
-                    method: "GET"
-                  })
-                    .then((res) => res.json())
-                    .then((res) => {
-                      //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
-                      console.log("Lowest inscription ID = ", res[punkID].lowest);
-                      console.log(
-                        "Lowest inscription TX = ",
-                        res[punkID].hashes[res[punkID].lowest]
-                      );
-                      this.lowestInscriptionID = res[punkID].lowest;
-                      this.lowestInscriptionHash =
-                        res[punkID].hashes[res[punkID].lowest];
-
-                      fetch(
-                        "https://ordinals.com/inscription/" +
-                          res[punkID].hashes[res[punkID].lowest],
-                        {
-                          method: "GET"
-                        }
-                      )
-                        .then((res) => res.text())
-                        .then((data) => {
-                          //console.log(data);
-                          const address = data.match(
-                            /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
-                          )[1];
-                          console.log("Inscription owner = ", address);
-                          this.inscriptionOwner = address;
-                          this.loading = false;
-
-
-                          if (this.inscriptionOwner == this.vaultOwner) {
-                            console.log("LEGIT! *****");
-                          } else {
-                            console.log("FAKE! ******");
-                          }
-                          
-                        })
-                        .catch((error) => {
-                          console.error(error);
-                        });
-                    });
-                } else {
-                  console.log("Unable to determine if this is a punk listing. The title does not contain a reference to punks.");
-                  this.loading = false;
-                  this.unableToDetermine = true;
+            if(contract == '0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab') {
+              fetch(
+                "https://api2.emblemvault.io/meta/" + id + "?experimental=true",
+                {
+                  method: "GET",
                 }
-              });
+              )
+                .then((res) => res.json())
+                .then((res) => {
+                  const btcCoin = res.addresses.find(
+                    (coin) => coin.coin === "BTC"
+                  );
+                  console.log("Emblem vault owner = ", btcCoin.address);
+                  this.vaultOwner = btcCoin.address;
+
+                  let punkID = res.name.match(/\d+/);
+                  punkID = punkID[0].replace("#", "");
+                  punkID = this.padNumber(punkID);
+                  this.punkID = punkID;
+                  console.log("Punk ID = ", punkID);
+
+                  if(res.name.toLowerCase().includes("punk")) {
+                    fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
+                      method: "GET"
+                    })
+                      .then((res) => res.json())
+                      .then((res) => {
+                        //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
+                        console.log("Lowest inscription ID = ", res[punkID].lowest);
+                        console.log(
+                          "Lowest inscription TX = ",
+                          res[punkID].hashes[res[punkID].lowest]
+                        );
+                        this.lowestInscriptionID = res[punkID].lowest;
+                        this.lowestInscriptionHash =
+                          res[punkID].hashes[res[punkID].lowest];
+
+                        fetch(
+                          "https://ordinals.com/inscription/" +
+                            res[punkID].hashes[res[punkID].lowest],
+                          {
+                            method: "GET"
+                          }
+                        )
+                          .then((res) => res.text())
+                          .then((data) => {
+                            //console.log(data);
+                            const address = data.match(
+                              /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
+                            )[1];
+                            console.log("Inscription owner = ", address);
+                            this.inscriptionOwner = address;
+                            this.loading = false;
+
+
+                            if (this.inscriptionOwner == this.vaultOwner) {
+                              console.log("LEGIT! *****");
+                            } else {
+                              console.log("FAKE! ******");
+                            }
+                            
+                          })
+                          .catch((error) => {
+                            console.error(error);
+                          });
+                      });
+                  } else {
+                    console.log("Unable to determine if this is a punk listing. The title does not contain a reference to punks.");
+                    this.loading = false;
+                    this.unableToDetermine = true;
+                  }
+                });
+            } else {
+              console.log("Incorrect contract address!");
+              this.loading = false;
+              this.fakeContract = true;
+            }
           },
         },
         mounted() {

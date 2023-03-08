@@ -81,7 +81,7 @@
           </div>
           <div v-else-if="vaultOwner && inscriptionOwner" class="text-2xl">
             <div
-              v-if="vaultOwner == inscriptionOwner"
+              v-if="vaultOwner.includes(inscriptionOwner)"
               class="flex justify-center border-4 border-green-500 p-2 m-2"
               style="color: #44a047;"
             >
@@ -106,11 +106,13 @@
             >
           </div>
           <div v-if="vaultOwner">
-            <b>Vault owner address:</b>&nbsp;
+            <b>Vault addresses:</b>&nbsp;
             <a
+              v-for="addy in vaultOwner"
               target="_blank"
+              class="block"
               :href="'https://emblem.finance/nft?id=' + tokenID "
-              >{{ vaultOwner }}</a
+              >{{ addy }}</a
             >
           </div>
           <div v-if="punkID">
@@ -206,8 +208,12 @@
                   const btcCoin = res.addresses.find(
                     (coin) => coin.coin === "BTC"
                   );
-                  console.log("Emblem vault owner = ", btcCoin.address);
-                  this.vaultOwner = btcCoin.address;
+                  const tapCoin = res.addresses.find(
+                    (coin) => coin.coin === "TAP"
+                  );
+                  //console.log("Emblem vault owner = ", btcCoin.address);
+                  this.vaultOwner = [btcCoin.address];
+                  if(tapCoin && tapCoin.address) this.vaultOwner.push(tapCoin.address);
 
                   let punkID = res.name.match(/\d+/);
                   punkID = punkID[0].replace("#", "");
@@ -249,7 +255,7 @@
                             this.loading = false;
 
 
-                            if (this.inscriptionOwner == this.vaultOwner) {
+                            if (this.vaultOwner.includes(this.inscriptionOwner)) {
                               console.log("LEGIT! *****");
                             } else {
                               console.log("FAKE! ******");

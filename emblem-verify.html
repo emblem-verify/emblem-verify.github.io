@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Bitcoin Punk Emblem Vault Verifier</title>
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/vue"></script>
+  </head>
+  <body>
+    <style>
+      body {
+        color: white;
+        background: url(bg2.jpg);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      a {
+        color: #1261e5;
+        text-decoration: underline;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+    </style>
+
+    <div id="app">
+      <center class="py-1 md:p-4">
+        <img
+          src="https://cryptopunks.app/cryptopunks/cryptopunk0205.png?size=2500&customColor=F7931A"
+          class="mt-8 mb-2 rounded-full w-16"
+        />
+        <h1 class="mb-2">
+          Bitcoin Punks Emblem Vault Opensea Verifier
+        </h1>
+        <h2 class="mb-4 w-1/2">
+          Enter an opensea link to an emblem vault bitcoin punk, and we will
+          check to make sure the inscription address matches the emblem vault
+          creator's address
+        </h2>
+        <input
+          v-model="enteredLink"
+          class="shadow appearance-none border rounded w-3/4 md:w-1/2 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          type="text"
+          placeholder="Enter Opensea link to Emblem Vault listing of Bitcoin Punk"
+          id="link"
+        /><button
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          @click="checkLegit()"
+        >
+          Check
+        </button>
+
+        <img v-show="loading" src="loader.gif" class="mt-4 mx-auto h-12" />
+
+        <div class="w-3/5 mx-auto mt-6 text-lg">
+          <div v-if="unableToDetermine" class="text-2xl">
+              <div
+              class="flex justify-center border-4 text-gray-600 border-gray-500 p-2 m-2"
+            >
+              <img src="yellow.webp" class="h-8 mr-2" /> Unable to determine. Use &nbsp;<a href="https://twitter.com/adamamcbride/status/1624205061751738374" target="_blank">manual method</a>&nbsp; to verify.
+            </div>
+          </div>
+          <div v-else-if="fakeContract">
+              <div
+              class="text-2xl flex justify-center border-2 border-red-500 p-2 m-2"
+              style="color: red;"
+            >
+              <img src="red.svg" class="h-8 mr-2" />
+              Vault is fake.
+            </div>
+          </div>
+          <div v-else-if="vaultOwner && inscriptionOwner" class="text-2xl">
+            <div
+              v-if="vaultOwner.includes(inscriptionOwner)"
+              class="flex justify-center border-4 border-green-500 p-2 m-2"
+              style="color: #44a047;"
+            >
+              <img src="green.svg" class="h-8 mr-2" /> Vault is legit!
+            </div>
+            <div
+              v-else
+              class="flex justify-center border-2 border-red-500 p-2 m-2"
+              style="color: red;"
+            >
+              <img src="red.svg" class="h-8 mr-2" />
+              Vault is fake.
+            </div>
+          </div>
+
+          <div v-if="tokenID">
+            <b>Token ID:</b>&nbsp;
+            <a
+              target="_blank"
+              :href="'https://opensea.io/assets/ethereum/0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab/' + tokenID "
+              >{{ tokenID }}</a
+            >
+          </div>
+          <div v-if="vaultOwner">
+            <b>Vault addresses:</b>&nbsp;
+            <a
+              v-for="addy in vaultOwner"
+              target="_blank"
+              class="block"
+              :href="'https://emblem.finance/nft?id=' + tokenID "
+              >{{ addy }}</a
+            >
+          </div>
+          <div v-if="punkID">
+            <b>Punk ID:</b>&nbsp;
+            <a
+              target="_blank"
+              :href="'https://cryptopunks.app/cryptopunks/details/' + punkID "
+              >#{{ punkID }}</a
+            >
+          </div>
+          <div v-if="lowestInscriptionID">
+            <b>Lowest inscription ID:</b>&nbsp;
+            <a
+              target="_blank"
+              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
+              >#{{ lowestInscriptionID }}</a
+            >
+          </div>
+          <div v-if="lowestInscriptionHash">
+            <b>Lowest inscription hash:</b>&nbsp;
+            <a
+              target="_blank"
+              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
+              >{{ lowestInscriptionHash }}</a
+            >
+          </div>
+          <div v-if="inscriptionOwner">
+            <b>Inscription owner address:</b>&nbsp;
+            <a
+              target="_blank"
+              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
+              >{{ inscriptionOwner }}</a
+            >
+          </div>
+        </div>
+        <div class="mt-16 opacity-70 text-xs w-1/2">Made with ❤️ by <a href="https://twitter.com/Hustlaaaaaaaaaa" target="_blank">hustla</a> for the <a href="https://bitcoinpunks.com" target="_blank">Bitcoin Punks</a> community. <br />Not affiliated with Bitcoin Punks. <a href="https://github.com/emblem-verify/emblem-verify.github.io" target="_blank">Source Code</a>
+      </center>
+    </div>
+
+    <script>
+      var app = Vue.createApp({
+        //data: function data() {
+        data() {
+          return {
+            enteredLink: null,
+            vaultOwner: null,
+            inscriptionOwner: null,
+            tokenID: null,
+            punkID: null,
+            lowestInscriptionID: null,
+            lowestInscriptionHash: null,
+            loading: false,
+            unableToDetermine: false
+          };
+        },
+        //methods: {
+        methods: {
+          padNumber: function (num) {
+            num = num.toString();
+            while (num.length < 4) {
+              num = "0" + num;
+            }
+            return num;
+          },
+          checkLegit: function () {
+            this.vaultOwner = null;
+            this.inscriptionOwner = null;
+            this.tokenID = null;
+            this.punkID = null;
+            this.lowestInscriptionID = null;
+            this.lowestInscriptionHash = null;
+            this.loading = true;
+            this.unableToDetermine = false;
+            this.fakeContract = false;
+
+            let link = this.enteredLink;
+            let linkParts = link.split('#')[0].split('?')[0].split("/");
+            let id = linkParts.pop();
+            let contract = linkParts.pop();
+            console.log("Token ID = ", id);
+            console.log("Contract = ", contract);
+            this.tokenID = id;
+
+            if(contract == '0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab') {
+              fetch(
+                "https://api2.emblemvault.io/meta/" + id + "?experimental=true",
+                {
+                  method: "GET",
+                }
+              )
+                .then((res) => res.json())
+                .then((res) => {
+                  const btcCoin = res.addresses.find(
+                    (coin) => coin.coin === "BTC"
+                  );
+                  const tapCoin = res.addresses.find(
+                    (coin) => coin.coin === "TAP"
+                  );
+                  //console.log("Emblem vault owner = ", btcCoin.address);
+                  this.vaultOwner = [btcCoin.address];
+                  if(tapCoin && tapCoin.address) this.vaultOwner.push(tapCoin.address);
+
+                  let punkID = res.name.match(/\d+/);
+                  punkID = punkID[0].replace("#", "");
+                  punkID = this.padNumber(punkID);
+                  this.punkID = punkID;
+                  console.log("Punk ID = ", punkID);
+
+                  if(res.name.toLowerCase().includes("punk")) {
+                    fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
+                      method: "GET"
+                    })
+                      .then((res) => res.json())
+                      .then((res) => {
+                        //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
+                        console.log("Lowest inscription ID = ", res[punkID].lowest);
+                        console.log(
+                          "Lowest inscription TX = ",
+                          res[punkID].hashes[res[punkID].lowest]
+                        );
+                        this.lowestInscriptionID = res[punkID].lowest;
+                        this.lowestInscriptionHash =
+                          res[punkID].hashes[res[punkID].lowest];
+
+                        fetch(
+                          "https://ordinals.com/inscription/" +
+                            res[punkID].hashes[res[punkID].lowest],
+                          {
+                            method: "GET"
+                          }
+                        )
+                          .then((res) => res.text())
+                          .then((data) => {
+                            //console.log(data);
+                            const address = data.match(
+                              /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
+                            )[1];
+                            console.log("Inscription owner = ", address);
+                            this.inscriptionOwner = address;
+                            this.loading = false;
+
+
+                            if (this.vaultOwner.includes(this.inscriptionOwner)) {
+                              console.log("LEGIT! *****");
+                            } else {
+                              console.log("FAKE! ******");
+                            }
+                            
+                          })
+                          .catch((error) => {
+                            console.error(error);
+                          });
+                      });
+                  } else {
+                    console.log("Unable to determine if this is a punk listing. The title does not contain a reference to punks.");
+                    this.loading = false;
+                    this.unableToDetermine = true;
+                  }
+                });
+            } else {
+              console.log("Incorrect contract address!");
+              this.loading = false;
+              this.fakeContract = true;
+            }
+          },
+        },
+        mounted() {
+        }
+      }).mount("#app");
+
+    </script>
+  </body>
+</html>

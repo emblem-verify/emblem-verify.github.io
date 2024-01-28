@@ -1,288 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-white">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Bitcoin Punk Emblem Vault Verifier</title>
+    <title>Ord.tools</title>
     <link
       href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
       rel="stylesheet"
     />
     <script src="https://unpkg.com/vue"></script>
+    <link href="https://db.onlinewebfonts.com/c/8f2a9d487bbbc60974cd132fc3a63862?family=Aeonik+Regular" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   </head>
-  <body>
-    <style>
-      body {
-        color: white;
-        background: url(bg2.jpg);
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-      }
-      a {
-        color: #1261e5;
-        text-decoration: underline;
-      }
-      h1 {
-        font-size: 2rem;
-      }
-    </style>
+  <body id="app" class="h-full">
 
-    <div id="app">
-      <center class="py-1 md:p-4">
-        <img
-          src="https://cryptopunks.app/cryptopunks/cryptopunk0205.png?size=2500&customColor=F7931A"
-          class="mt-8 mb-2 rounded-full w-16"
-        />
-        <h1 class="mb-2">
-          Bitcoin Punks Emblem Vault Opensea Verifier
-        </h1>
-        <h2 class="mb-4 w-1/2">
-          Enter an opensea link to an emblem vault bitcoin punk, and we will
-          check to make sure the inscription address matches the emblem vault
-          creator's address
-        </h2>
-        <input
-          v-model="enteredLink"
-          class="shadow appearance-none border rounded w-3/4 md:w-1/2 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          type="text"
-          placeholder="Enter Opensea link to Emblem Vault listing of Bitcoin Punk"
-          id="link"
-        /><button
-          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          @click="checkLegit()"
-        >
-          Check
-        </button>
+<div>
 
-        <img v-show="loading" src="loader.gif" class="mt-4 mx-auto h-12" />
-
-        <div class="w-3/5 mx-auto mt-6 text-lg">
-          <div v-if="unableToDetermine" class="text-2xl">
-              <div
-              class="flex justify-center border-4 text-gray-600 border-gray-500 p-2 m-2"
-            >
-              <img src="yellow.webp" class="h-8 mr-2" /> Unable to determine. Use &nbsp;<a href="https://twitter.com/adamamcbride/status/1624205061751738374" target="_blank">manual method</a>&nbsp; to verify.
-            </div>
-          </div>
-          <div v-else-if="fakeContract">
-              <div
-              class="text-2xl flex justify-center border-2 border-red-500 p-2 m-2"
-              style="color: red;"
-            >
-              <img src="red.svg" class="h-8 mr-2" />
-              Vault is fake.
-            </div>
-          </div>
-          <div v-else-if="vaultOwner && inscriptionOwner" class="text-2xl">
-            <div
-              v-if="vaultOwner.includes(inscriptionOwner)"
-              class="flex justify-center border-4 border-green-500 p-2 m-2"
-              style="color: #44a047;"
-            >
-              <img src="green.svg" class="h-8 mr-2" /> Vault is legit!
-            </div>
-            <div
-              v-else
-              class="flex justify-center border-2 border-red-500 p-2 m-2"
-              style="color: red;"
-            >
-              <img src="red.svg" class="h-8 mr-2" />
-              Vault is fake.
-            </div>
-          </div>
-
-          <div v-if="tokenID">
-            <b>Token ID:</b>&nbsp;
-            <a
-              target="_blank"
-              :href="'https://opensea.io/assets/ethereum/0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab/' + tokenID "
-              >{{ tokenID }}</a
-            >
-          </div>
-          <div v-if="vaultOwner">
-            <b>Vault addresses:</b>&nbsp;
-            <a
-              v-for="addy in vaultOwner"
-              target="_blank"
-              class="block"
-              :href="'https://emblem.finance/nft?id=' + tokenID "
-              >{{ addy }}</a
-            >
-          </div>
-          <div v-if="punkID">
-            <b>Punk ID:</b>&nbsp;
-            <a
-              target="_blank"
-              :href="'https://cryptopunks.app/cryptopunks/details/' + punkID "
-              >#{{ punkID }}</a
-            >
-          </div>
-          <div v-if="lowestInscriptionID">
-            <b>Lowest inscription ID:</b>&nbsp;
-            <a
-              target="_blank"
-              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
-              >#{{ lowestInscriptionID }}</a
-            >
-          </div>
-          <div v-if="lowestInscriptionHash">
-            <b>Lowest inscription hash:</b>&nbsp;
-            <a
-              target="_blank"
-              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
-              >{{ lowestInscriptionHash }}</a
-            >
-          </div>
-          <div v-if="inscriptionOwner">
-            <b>Inscription owner address:</b>&nbsp;
-            <a
-              target="_blank"
-              :href="'https://ordinals.com/inscription/' + lowestInscriptionHash "
-              >{{ inscriptionOwner }}</a
-            >
-          </div>
+  
+    <!-- Static sidebar for desktop -->
+      <!-- Sidebar component, swap this element with another sidebar if you like -->
+    <div :class="sidebar ? '' : 'hidden'" class="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col h-full">
+      <div class="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6 h-full">
+        <div class="flex h-16 shrink-0 items-center text-xl font-bold" style="font-family: 'Aeonik Regular'">
+          <i class="fa fa-cog mr-2 text-lg text-indigo-500"></i> Ord.tools
+          <!-- <img class="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company"> -->
         </div>
-        <div class="mt-16 opacity-70 text-xs w-1/2">Made with ❤️ by <a href="https://twitter.com/Hustlaaaaaaaaaa" target="_blank">hustla</a> for the <a href="https://bitcoinpunks.com" target="_blank">Bitcoin Punks</a> community. <br />Not affiliated with Bitcoin Punks. <a href="https://github.com/emblem-verify/emblem-verify.github.io" target="_blank">Source Code</a>
-      </center>
+        <nav class="flex flex-1 flex-col">
+          <ul role="list" class="flex flex-1 flex-col gap-y-7">
+            <li>
+              <ul role="list" class="-mx-2 space-y-1">
+                <li>
+                  <!-- Current: "bg-gray-50 text-indigo-600", Default: "text-gray-700 hover:text-indigo-600 hover:bg-gray-50" -->
+                  <a href="#" class="bg-gray-50 text-indigo-600 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <i class="fa fa-wallet text-xl group-hover:text-indigo-600"></i>
+                    Runestone Wallet Checker
+                  </a>
+                </li>
+                <li>
+                  <a href="emblem-verify.html" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <i class="fa fa-lock text-xl group-hover:text-indigo-600"></i>
+                    Bitcoin Punk Vault Verifier
+                  </a>
+                </li>
+                <li>
+              </ul>
+            </li>
+            <li>
+              <div class="text-xs font-semibold leading-6 text-gray-400">Links</div>
+              <ul role="list" class="-mx-2 mt-2 space-y-1">
+                <li>
+                  <!-- Current: "bg-gray-50 text-indigo-600", Default: "text-gray-700 hover:text-indigo-600 hover:bg-gray-50" -->
+                  <a href="https://ord.io" target="_blank" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <!-- <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600">E</span> -->
+                    <i class="flex p-1 fa fa-eye items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600"></i>
+                    <span class="truncate">Explore</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://magiceden.com" target="_blank" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <i class="flex p-1 fa fa-shopping-cart  items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600"></i>
+                    <span class="truncate">Buy/Sell</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://ordinals.com" target="_blank" class="text-gray-700 hover:text-indigo-600 hover:bg-gray-50 group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
+                    <i class="flex p-1 fa fa-book pl-1.5 w-6 h-6 items-center justify-center rounded-lg border text-[0.625rem] font-medium bg-white text-gray-400 border-gray-200 group-hover:border-indigo-600 group-hover:text-indigo-600"></i>
+                    <span class="truncate">Learn more</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="-mx-6 mt-auto">
+              <!-- <a href="#" class="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50">
+                <img class="h-8 w-8 rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+                <span class="sr-only">Your profile</span>
+                <span aria-hidden="true">Tom Cook</span>
+              </a> -->
+            </li>
+          </ul>
+        </nav>
+      </div>
     </div>
+  
+    <div class="sticky top-0 z-40 flex items-center gap-x-6 bg-white px-4 py-4 shadow-sm sm:px-6 lg:hidden">
+      <button @click="sidebar = !sidebar" type="button" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
+        <span class="sr-only">Open sidebar</span>
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
+      <div v-if="!sidebar" class="flex shrink-0 items-center text-xl font-bold" style="font-family: 'Aeonik Regular'">
+        <i class="fa fa-cog mr-2 text-lg text-indigo-500"></i> Ord.tools
+      </div>
+      <!-- <div class="flex-1 text-sm font-semibold leading-6 text-gray-900">Dashboard</div> -->
+      <!-- <a href="#">
+        <span class="sr-only">Your profile</span>
+        <img class="h-8 w-8 rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
+      </a> -->
+    </div>
+  
+    <main class="py-20 lg:pl-72 flex justify-center items-center">
+      <div class="w-full max-w-3xl px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-semibold text-center text-gray-800 mb-2" style="font-family: 'Aeonik Regular'">Runestone Wallet Checker</h1>
+        <h2 class="text-xl text-center text-gray-500 mb-6">Enter your wallet address to check if your eligible for the <a href="https://x.com/LeonidasNFT/status/1750963789971837025?s=20" target="_blank" class="text-indigo-500 hover:underline">Runestone airdrop:</a></h2>
+        <form @submit.prevent="checkAddress" class="flex flex-col items-center">
+              <input v-model="walletAddress" type="text" placeholder="Enter your wallet address" class="border p-2 w-full mb-4" />
+              <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full mb-4">
+                  Submit
+              </button>
+          </form>
+          <div class="mt-6 text-2xl">
+            <div v-if="addressFound" class="text-center text-green-600">Your address is eligible!</div>
+            <div v-if="searched && !addressFound" class="text-center text-red-600">Address Not Found.</div>
+          </div>
+      </div>
+    </main>
+  
+  </div>
 
-    <script>
-      var app = Vue.createApp({
-        //data: function data() {
-        data() {
-          return {
-            enteredLink: null,
-            vaultOwner: null,
-            inscriptionOwner: null,
-            tokenID: null,
-            punkID: null,
-            lowestInscriptionID: null,
-            lowestInscriptionHash: null,
-            loading: false,
-            unableToDetermine: false
-          };
-        },
-        //methods: {
-        methods: {
-          padNumber: function (num) {
-            num = num.toString();
-            while (num.length < 4) {
-              num = "0" + num;
-            }
-            return num;
-          },
-          checkLegit: function () {
-            this.vaultOwner = null;
-            this.inscriptionOwner = null;
-            this.tokenID = null;
-            this.punkID = null;
-            this.lowestInscriptionID = null;
-            this.lowestInscriptionHash = null;
-            this.loading = true;
-            this.unableToDetermine = false;
-            this.fakeContract = false;
-
-            let link = this.enteredLink;
-            let linkParts = link.split('#')[0].split('?')[0].split("/");
-            let id = linkParts.pop();
-            let contract = linkParts.pop();
-            console.log("Token ID = ", id);
-            console.log("Contract = ", contract);
-            this.tokenID = id;
-
-            if(contract == '0x82c7a8f707110f5fbb16184a5933e9f78a34c6ab') {
-              fetch(
-                "https://api2.emblemvault.io/meta/" + id + "?experimental=true",
-                {
-                  method: "GET",
-                }
-              )
-                .then((res) => res.json())
-                .then((res) => {
-                  const btcCoin = res.addresses.find(
-                    (coin) => coin.coin === "BTC"
-                  );
-                  const tapCoin = res.addresses.find(
-                    (coin) => coin.coin === "TAP"
-                  );
-                  //console.log("Emblem vault owner = ", btcCoin.address);
-                  this.vaultOwner = [btcCoin.address];
-                  if(tapCoin && tapCoin.address) this.vaultOwner.push(tapCoin.address);
-
-                  let punkID = res.name.match(/\d+/);
-                  punkID = punkID[0].replace("#", "");
-                  punkID = this.padNumber(punkID);
-                  this.punkID = punkID;
-                  console.log("Punk ID = ", punkID);
-
-                  if(res.name.toLowerCase().includes("punk")) {
-                    fetch("https://api.bitcoinpunks.com/punk-inscriptions.json", {
-                      method: "GET"
-                    })
-                      .then((res) => res.json())
-                      .then((res) => {
-                        //const btcCoin = res.addresses.find((coin) => coin.coin === "BTC");
-                        console.log("Lowest inscription ID = ", res[punkID].lowest);
-                        console.log(
-                          "Lowest inscription TX = ",
-                          res[punkID].hashes[res[punkID].lowest]
-                        );
-                        this.lowestInscriptionID = res[punkID].lowest;
-                        this.lowestInscriptionHash =
-                          res[punkID].hashes[res[punkID].lowest];
-
-                        fetch(
-                          "https://ordinals.com/inscription/" +
-                            res[punkID].hashes[res[punkID].lowest],
-                          {
-                            method: "GET"
-                          }
-                        )
-                          .then((res) => res.text())
-                          .then((data) => {
-                            //console.log(data);
-                            const address = data.match(
-                              /<dt>address<\/dt>\s*<dd class=monospace>(.*?)<\/dd>/
-                            )[1];
-                            console.log("Inscription owner = ", address);
-                            this.inscriptionOwner = address;
-                            this.loading = false;
-
-
-                            if (this.vaultOwner.includes(this.inscriptionOwner)) {
-                              console.log("LEGIT! *****");
-                            } else {
-                              console.log("FAKE! ******");
-                            }
-                            
-                          })
-                          .catch((error) => {
-                            console.error(error);
-                          });
-                      });
-                  } else {
-                    console.log("Unable to determine if this is a punk listing. The title does not contain a reference to punks.");
-                    this.loading = false;
-                    this.unableToDetermine = true;
-                  }
-                });
-            } else {
-              console.log("Incorrect contract address!");
-              this.loading = false;
-              this.fakeContract = true;
-            }
-          },
-        },
-        mounted() {
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          walletAddress: '',
+          addressFound: false,
+          searched: false,
+          sidebar: false
+        };
+      },
+      methods: {
+        async checkAddress() {
+          const response = await fetch('https://raw.githubusercontent.com/bh2smith/safe-airdrop/main/src/static/rinkebyTokens.json');
+          const data = await response.json();
+          this.addressFound = data.some(item => item.address === this.walletAddress);
+          this.searched = true;
         }
-      }).mount("#app");
-
+      }
+    });
+    
+    app.mount('#app');
     </script>
-  </body>
+</body>
 </html>
+  
